@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Civilización de estudio</title>
+  <meta name="description" content="Checklist de estudio que construye una civilización con cada tarea completada.">
+  <meta name="theme-color" content="#2f3e46">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="iconos/icono.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="iconos/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Civilización">
+  <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+  <div id="banda-prueba" class="banda-prueba" hidden>MODO PRUEBA · el temporizador dura 10 segundos</div>
+
+  <header class="cabecera">
+    <a class="marca" href="#inicio" aria-label="Inicio">
+      <img src="iconos/icono.svg" alt="" width="30" height="30">
+      <span>Civilización de estudio</span>
+    </a>
+    <nav class="nav" id="nav" aria-label="Secciones">
+      <a href="#inicio" data-p="inicio"><span class="ico">🏛️</span><span>Inicio</span></a>
+      <a href="#checklist" data-p="checklist"><span class="ico">✅</span><span>Tareas</span></a>
+      <a href="#apuntes" data-p="apuntes"><span class="ico">📖</span><span>Apuntes</span></a>
+      <a href="#importar" data-p="importar"><span class="ico">📥</span><span>Importar</span></a>
+      <a href="#asignaturas" data-p="asignaturas"><span class="ico">🎨</span><span>Asignaturas</span></a>
+      <a href="#ajustes" data-p="ajustes"><span class="ico">⚙️</span><span>Ajustes</span></a>
+    </nav>
+  </header>
+
+  <main id="principal">
+    <!-- 1. Civilización -->
+    <section class="pantalla" id="p-inicio" hidden>
+      <div class="progreso-civ">
+        <div class="progreso-texto">
+          <strong id="civ-contador">0 de 0 tareas</strong>
+          <span class="era" id="civ-era">Campamento</span>
+        </div>
+        <div class="barra" role="progressbar" aria-valuemin="0" aria-valuemax="100" id="civ-barra"><div></div></div>
+        <div class="progreso-sub" id="civ-sub"></div>
+      </div>
+      <div class="escena-marco">
+        <div id="escena" class="escena" aria-label="Tu civilización"></div>
+        <div id="civ-vacia" class="civ-vacia" hidden>
+          <h2>Tu civilización aún es un terreno vacío</h2>
+          <p><strong>Primer paso:</strong> sube tu calendario y tus apuntes. Con ellos se genera tu checklist y cada tarea completada levantará una parte de la ciudad.</p>
+          <a class="btn primario" href="#importar">Sube tu calendario y tus apuntes</a>
+        </div>
+      </div>
+      <div class="inicio-inferior">
+        <div class="tarjeta" id="siguiente-tarea"></div>
+        <div class="tarjeta" id="examenes-proximos"></div>
+      </div>
+    </section>
+
+    <!-- 2. Checklist -->
+    <section class="pantalla" id="p-checklist" hidden>
+      <div class="barra-herr">
+        <h1>Checklist</h1>
+        <div class="acciones">
+          <button class="btn" id="btn-ir-hoy">📍 Ir a hoy</button>
+          <button class="btn" id="btn-anadir-tarea">＋ Añadir tarea</button>
+        </div>
+      </div>
+      <div class="filtros" id="filtros"></div>
+      <div id="lista-dias"></div>
+    </section>
+
+    <!-- 3. Apuntes -->
+    <section class="pantalla" id="p-apuntes" hidden>
+      <div class="barra-herr">
+        <h1>Apuntes</h1>
+      </div>
+      <div class="pestanas" id="pestanas-apuntes" role="tablist"></div>
+      <div class="buscador">
+        <input type="search" id="buscar-apuntes" placeholder="Buscar en estos apuntes…" autocomplete="off">
+        <span id="buscar-info" class="pista"></span>
+        <button class="btn mini" id="buscar-ant" title="Anterior">▲</button>
+        <button class="btn mini" id="buscar-sig" title="Siguiente">▼</button>
+      </div>
+      <div id="apuntes-contenido"></div>
+    </section>
+
+    <!-- 4. Importar -->
+    <section class="pantalla" id="p-importar" hidden>
+      <div id="importar-contenido"></div>
+    </section>
+
+    <!-- 5. Asignaturas -->
+    <section class="pantalla" id="p-asignaturas" hidden>
+      <div class="barra-herr">
+        <h1>Asignaturas</h1>
+        <div class="acciones"><button class="btn" id="btn-nueva-asig">＋ Nueva asignatura</button></div>
+      </div>
+      <div id="lista-asignaturas"></div>
+    </section>
+
+    <!-- 6. Ajustes -->
+    <section class="pantalla" id="p-ajustes" hidden>
+      <div id="ajustes-contenido"></div>
+    </section>
+  </main>
+
+  <!-- Modo estudio -->
+  <div id="estudio" class="estudio" hidden>
+    <div class="estudio-panel">
+      <div class="estudio-reloj">
+        <div class="estudio-asig" id="es-asig"></div>
+        <div class="estudio-titulo" id="es-titulo"></div>
+        <div class="anillo">
+          <svg viewBox="0 0 120 120" aria-hidden="true">
+            <circle cx="60" cy="60" r="52" class="anillo-fondo"/>
+            <circle cx="60" cy="60" r="52" class="anillo-progreso" id="es-anillo"/>
+          </svg>
+          <div class="anillo-texto">
+            <div id="es-tiempo">00:00</div>
+            <small id="es-fase">Estudiando</small>
+          </div>
+        </div>
+        <div class="estudio-info" id="es-info"></div>
+        <div class="distracciones" id="es-distr" title="Distracciones"></div>
+        <button class="btn primario" id="es-seguir" hidden>Volver a estudiar</button>
+      </div>
+      <div class="estudio-apuntes" id="es-apuntes"></div>
+    </div>
+    <div class="estudio-aviso" id="es-aviso" hidden>
+      <div>
+        <div class="aviso-icono">⏸️</div>
+        <h2>Vuelve a estudiar</h2>
+        <p id="es-aviso-texto">El tiempo está en pausa.</p>
+        <button class="btn primario grande" id="es-volver">Volver a estudiar</button>
+      </div>
+    </div>
+    <button class="emergencia" id="es-emergencia" title="Mantén pulsado 10 segundos para salir (la tarea no contará)">
+      <svg viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="15" class="em-fondo"/><circle cx="18" cy="18" r="15" class="em-prog" id="es-em-prog"/></svg>
+      <span id="es-em-texto">Salida de emergencia (mantén 10 s)</span>
+    </button>
+  </div>
+
+  <div id="capa-modal"></div>
+  <div id="tostadas" aria-live="polite"></div>
+
+  <script src="vendor/marked.min.js"></script>
+  <script src="js/utiles.js"></script>
+  <script src="js/almacen.js"></script>
+  <script src="js/modelo.js"></script>
+  <script src="js/ejemplo.js"></script>
+  <script src="js/asignaturas.js"></script>
+  <script src="js/checklist.js"></script>
+  <script src="js/apuntes.js"></script>
+  <script src="js/importar.js"></script>
+  <script src="js/ia.js"></script>
+  <script src="js/civilizacion.js"></script>
+  <script src="js/estudio.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
