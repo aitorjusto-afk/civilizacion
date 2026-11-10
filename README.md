@@ -66,6 +66,7 @@ Una web no puede bloquear el ordenador. Esto es lo que hace:
 - La cuenta atrás **solo avanza mientras estás dentro**. Si cambias de pestaña, de ventana o quitas la pantalla completa, se pausa, sale «Vuelve a estudiar» y se apunta una distracción. Cerrar o recargar la pestaña también cuenta como una.
 - Con 3 distracciones, la pieza sale dañada (gris, en ruinas). Se repara con una sesión limpia de esa asignatura (en la checklist sale «🔧 Repetir sesión»).
 - Descanso de 10 min cada 50 min, dentro de la web.
+- **Test para salir antes:** al final de los apuntes de la tarea hay un test de 5 preguntas sobre ellos. Se desbloquea cuando llevas un tercio del tiempo; con 4 aciertos o más, la sesión termina y la tarea cuenta. Si fallas, te enseña las respuestas y puedes repetir (con preguntas nuevas) tras 5 minutos más de estudio. Con clave de Gemini las preguntas las hace la IA; sin clave son automáticas de completar huecos.
 - Al intentar cerrar o recargar sale el aviso del navegador.
 - Salida de emergencia: mantener pulsado 10 segundos el botón de abajo a la izquierda. La tarea no cuenta y la sesión queda como «abandonada».
 - Si se cierra la pestaña a mitad, al volver te ofrece seguir con el tiempo que quedaba.

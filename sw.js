@@ -1,10 +1,10 @@
 /* Service worker: guarda la web para que funcione sin internet (salvo la llamada a la IA).
    Al cambiar archivos de la web, sube VERSION para que los móviles descarguen la nueva. */
-const VERSION = 'civ-v2';
+const VERSION = 'civ-v3';
 const ARCHIVOS = [
   './', 'index.html', 'manifest.webmanifest', 'css/estilos.css',
   'js/utiles.js', 'js/almacen.js', 'js/modelo.js', 'js/ejemplo.js', 'js/asignaturas.js', 'js/checklist.js',
-  'js/visor.js', 'js/apuntes.js', 'js/importar.js', 'js/ia.js', 'js/civilizacion.js', 'js/estudio.js', 'js/app.js',
+  'js/visor.js', 'js/apuntes.js', 'js/importar.js', 'js/ia.js', 'js/civilizacion.js', 'js/test.js', 'js/estudio.js', 'js/app.js',
   'vendor/marked.min.js', 'vendor/pdf.min.js', 'vendor/pdf.worker.min.js',
   'iconos/icono.svg', 'iconos/icono-192.png', 'iconos/icono-512.png', 'iconos/apple-touch-icon.png',
 ];

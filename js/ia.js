@@ -75,7 +75,7 @@ ${textoBloques()}`;
   }
 
   /* ---------- A) Gemini ---------- */
-  async function llamarGemini() {
+  async function llamarGemini(prompt = instrucciones(false), esquema = ESQUEMA, temperatura = 0.2) {
     const clave = (App.ajustes.claveGemini || '').trim();
     const modelo = (App.ajustes.modelo || 'gemini-2.5-flash').trim().replace(/^models\//, '');
     if (!clave) throw Object.assign(new Error('Falta la clave de Gemini. Pégala en Ajustes.'), { tipo: 'clave' });
@@ -85,8 +85,8 @@ ${textoBloques()}`;
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-goog-api-key': clave },
         body: JSON.stringify({
-          contents: [{ role: 'user', parts: [{ text: instrucciones(false) }] }],
-          generationConfig: { responseMimeType: 'application/json', responseSchema: ESQUEMA, temperature: 0.2 },
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          generationConfig: { responseMimeType: 'application/json', responseSchema: esquema, temperature: temperatura },
         }),
       });
     } catch (e) {
@@ -108,6 +108,41 @@ ${textoBloques()}`;
     const texto = ((cand.content && cand.content.parts) || []).map((p) => p.text || '').join('');
     if (cand.finishReason === 'MAX_TOKENS') throw new Error('La respuesta de Gemini se cortó por larga. Prueba con un calendario más corto o con la opción B.');
     return texto;
+  }
+
+  /* Preguntas tipo test sobre unos apuntes (para salir antes del modo estudio). */
+  const ESQUEMA_PREGUNTAS = {
+    type: 'ARRAY',
+    items: {
+      type: 'OBJECT',
+      properties: {
+        pregunta: { type: 'STRING' },
+        opciones: { type: 'ARRAY', items: { type: 'STRING' } },
+        correcta: { type: 'INTEGER', description: 'Índice (desde 0) de la opción correcta' },
+        explicacion: { type: 'STRING' },
+      },
+      required: ['pregunta', 'opciones', 'correcta', 'explicacion'],
+      propertyOrdering: ['pregunta', 'opciones', 'correcta', 'explicacion'],
+    },
+  };
+  async function generarPreguntas(apuntes, n = 5) {
+    const prompt = `Eres un profesor que comprueba si un alumno se ha leído y entendido sus apuntes.
+Escribe ${n} preguntas tipo test en español basadas SOLO en los APUNTES de abajo (nada que no salga en ellos).
+- Cada pregunta tiene 4 opciones y una sola correcta. Las incorrectas deben ser creíbles.
+- Reparte las preguntas por todo el texto y pregunta por ideas importantes (conceptos, definiciones, diferencias, fórmulas, pasos), no por detalles sin importancia como números de página o títulos.
+- "correcta" es el índice (0 a 3) de la opción correcta.
+- "explicacion": una frase que explique la respuesta correcta según los apuntes.
+Devuelve SOLO el JSON.
+
+APUNTES
+${String(apuntes).slice(0, 40000)}`;
+    const lista = extraerJson(await llamarGemini(prompt, ESQUEMA_PREGUNTAS, 0.7));
+    if (!Array.isArray(lista)) throw new Error('Gemini no devolvió una lista de preguntas.');
+    const buenas = lista.filter((p) => p && String(p.pregunta || '').trim() && Array.isArray(p.opciones) && p.opciones.length >= 2
+      && Number.isInteger(p.correcta) && p.correcta >= 0 && p.correcta < p.opciones.length)
+      .map((p) => ({ pregunta: String(p.pregunta).trim(), opciones: p.opciones.map((o) => String(o)), correcta: p.correcta, explicacion: String(p.explicacion || '') }));
+    if (buenas.length < Math.min(3, n)) throw new Error('Gemini devolvió pocas preguntas válidas.');
+    return buenas.slice(0, n);
   }
 
   async function listarModelos() {
@@ -329,7 +364,7 @@ ${textoBloques()}`;
     location.hash = '#checklist';
   }
 
-  return { renderZona, renderVistaPrevia, instrucciones, validar, extraerJson, listarModelos };
+  return { renderZona, renderVistaPrevia, instrucciones, validar, extraerJson, listarModelos, generarPreguntas };
 })();
 
 /* ---------- Lector local (sin IA) ---------- */

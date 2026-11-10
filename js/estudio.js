@@ -115,8 +115,14 @@ const Estudio = (() => {
     cont.innerHTML = `<div class="es-ap-cab"><strong title="${U.esc(titulos)}">${U.esc(titulos.length > 90 ? titulos.slice(0, 90) + '…' : titulos)}</strong>
       <input type="search" id="es-buscar" placeholder="Buscar…">${resto > 0 ? `<button class="btn mini" id="es-todos">Ver todos los apuntes</button>` : ''}</div>
       <div id="es-resultados"></div>
-      <div class="lectura" id="es-lectura"></div>`;
+      <div class="lectura" id="es-lectura"></div>
+      <div id="es-test"></div>`;
     Apuntes.pintarBloques(U.$('#es-lectura'), elegidos, ses.asignatura);
+    Test.montar(U.$('#es-test'), {
+      sesion: () => ses,
+      texto: () => elegidos.map((b) => b.texto).join('\n\n'),
+      alAprobar: (aciertos, total) => terminar({ adelantada: true, aciertos, total }),
+    });
     const bt = U.$('#es-todos');
     const verTodo = () => { if (!U.$('#es-todos')) return; Apuntes.pintarBloques(U.$('#es-lectura'), bl, ses.asignatura); U.$('#es-todos').remove(); };
     if (bt) bt.onclick = verTodo;
@@ -186,6 +192,7 @@ const Estudio = (() => {
     U.$('#es-distr').innerHTML = Array.from({ length: MAX_DISTR }, (_, i) => `<span class="punto ${i < ses.distracciones ? 'gastado' : ''}"></span>`).join('')
       + `<small>${ses.distracciones >= MAX_DISTR ? 'Pieza dañada 🏚️' : `${ses.distracciones}/${MAX_DISTR} distracciones`}</small>`;
     U.$('#es-seguir').hidden = ses.fase !== 'listo';
+    Test.actualizar();
     document.title = `${texto} · ${ses.fase === 'descanso' ? 'Descanso' : 'Estudiando'}`;
   }
 
@@ -244,6 +251,7 @@ const Estudio = (() => {
   /* ---------- Fin ---------- */
   function cerrar() {
     clearInterval(intervalo); intervalo = null;
+    Test.desmontar();
     escuchar(false);
     soltarWakeLock();
     salirFs();
@@ -253,19 +261,21 @@ const Estudio = (() => {
     Almacen.borrar('sesionActiva');
   }
 
-  function registrar(s, estado) {
+  function registrar(s, estado, extra = {}) {
     Modelo.registrarSesion({
       tareaId: s.tareaId, asignatura: s.asignatura, titulo: s.titulo, estado,
       inicio: s.inicio, fin: Date.now(), minutos: Math.round((s.estudiadoMs / s.totalMs) * s.minutos), distracciones: s.distracciones, prueba: !!s.prueba,
+      ...(extra.adelantada ? { adelantada: true, test: `${extra.aciertos}/${extra.total}` } : {}),
     });
   }
 
-  async function terminar() {
+  async function terminar(extra = {}) {
+    if (!ses) return;
     const s = ses;
     ses = null;
     cerrar();
     const limpia = s.distracciones < MAX_DISTR;
-    registrar(s, 'completada');
+    registrar(s, 'completada', extra);
     const t = App.tareas.find((x) => x.id === s.tareaId);
     const yaHecha = t && t.hecha;
     let reparadas = 0;
@@ -278,7 +288,9 @@ const Estudio = (() => {
     const msg = limpia
       ? `<p>✅ Sesión limpia${s.distracciones ? ` (${s.distracciones} ${s.distracciones === 1 ? 'distracción' : 'distracciones'})` : ' sin distracciones'}.</p>${yaHecha ? '' : '<p>🏗️ Se ha construido una nueva pieza de tu civilización.</p>'}${reparadas ? `<p>🔧 Has reparado ${reparadas} ${reparadas === 1 ? 'pieza dañada' : 'piezas dañadas'} de ${U.esc(s.asignatura)}.</p>` : ''}`
       : `<p>Con ${s.distracciones} distracciones ${yaHecha ? 'la pieza sigue dañada' : 'la pieza sale <strong>dañada</strong>'} 🏚️.</p><p>Repite una sesión limpia de ${U.esc(s.asignatura)} para repararla.</p>`;
-    await U.modal('¡Tiempo cumplido!', msg, [{ texto: 'Ver mi civilización', valor: true, clase: 'primario' }], { obligatorio: true });
+    const titulo = extra.adelantada ? '🎯 ¡Test aprobado!' : '¡Tiempo cumplido!';
+    const previo = extra.adelantada ? `<p>Has acertado <strong>${extra.aciertos} de ${extra.total}</strong> y sales <strong>${U.fmtReloj(s.totalMs - s.estudiadoMs)}</strong> antes de tiempo.</p>` : '';
+    await U.modal(titulo, previo + msg, [{ texto: 'Ver mi civilización', valor: true, clase: 'primario' }], { obligatorio: true });
     location.hash = '#inicio';
     AppUI.refrescar();
     AppUI.comprobarCompleta();
