@@ -174,7 +174,7 @@ ${textoBloques()}`;
   /* ---------- Zona de generación (pantalla Importar) ---------- */
   function renderZona(cont) {
     const modo = App.ajustes.modoIA === 'claude' ? 'claude' : 'gemini';
-    const hayDatos = App.calendario.trim() || Object.keys(App.apuntes).length;
+    const hayDatos = App.calendario.trim() || Modelo.hayAlgunApunte();
     const tieneClave = !!(App.ajustes.claveGemini || '').trim();
     const zonaA = `<div class="opcion-ia">
         <h3>A · Con Gemini (gratis)</h3>
@@ -232,7 +232,7 @@ ${textoBloques()}`;
       catch (e) { U.avisar('No se pudo validar', U.esc(e.message)); }
     };
     U.$('#gen-local', cont).onclick = () => {
-      if (!App.calendario.trim() && !Object.keys(App.apuntes).length) return U.avisar('Faltan datos', 'Guarda primero el calendario o los apuntes.');
+      if (!App.calendario.trim() && !Modelo.hayAlgunApunte()) return U.avisar('Faltan datos', 'Guarda primero el calendario o los apuntes.');
       const tareas = Lector.leer(App.calendario);
       tareas.push(...Lector.sugerir(tareas));
       abrirBorrador({ tareas, errores: tareas.length ? [] : ['No he reconocido ninguna fila. Revisa que el calendario tenga columnas Día | Asignatura | Qué hacer | Tiempo.'] }, 'lector local');

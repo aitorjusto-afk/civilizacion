@@ -47,7 +47,7 @@ y abre <http://localhost:8000>. (Si tienes Node: `npx serve .`)
 
 1. **Asignaturas:** ya vienen SI, ED, DWES, BD, PROG y LM con sus fechas de examen. Puedes editarlas.
 2. **Importar → Calendario:** sube el PDF (se lee en tu navegador) o pega el texto. Revisa el texto extraído y corrige si hace falta.
-3. **Importar → Apuntes:** por asignatura, pega texto o importa .md, .txt o .pdf. Cada título (`#`, `##`, `###`) empieza un bloque numerado.
+3. **Importar → Apuntes:** por asignatura, pega texto o importa .md, .txt o .pdf. Los **PDF se guardan tal cual** y se ven con su formato original, página a página; se dividen en bloques según su índice (marcadores) o, si no tiene, según sus títulos. En el texto, cada título (`#`, `##`, `###`) empieza un bloque.
 4. **Generar checklist:** con Gemini (A) o con tu chat de Claude (B). Revisa la vista previa, ajusta y guarda.
 5. **Estudia:** en cada tarea de estudio pulsa «Empezar a estudiar». Las entregas y los exámenes se marcan con la casilla.
 

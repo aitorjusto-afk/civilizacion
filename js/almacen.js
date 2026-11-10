@@ -33,14 +33,17 @@ const Almacen = (() => {
   }
 
   /* ---------- IndexedDB ---------- */
-  const memIdb = { apuntes: {}, kv: {} };
+  const memIdb = { apuntes: {}, kv: {}, archivos: {} };
   let promesaDb = null;
   function db() {
     if (!promesaDb) {
       promesaDb = new Promise((res, rej) => {
         try {
-          const r = indexedDB.open('estudio-civilizacion', 1);
-          r.onupgradeneeded = () => { const d = r.result; d.createObjectStore('apuntes'); d.createObjectStore('kv'); };
+          const r = indexedDB.open('estudio-civilizacion', 2);
+          r.onupgradeneeded = () => {
+            const d = r.result;
+            ['apuntes', 'kv', 'archivos'].forEach((s) => { if (!d.objectStoreNames.contains(s)) d.createObjectStore(s); });
+          };
           r.onsuccess = () => res(r.result);
           r.onerror = () => rej(r.error);
           r.onblocked = () => rej(new Error('IndexedDB bloqueada'));
@@ -91,13 +94,29 @@ const Almacen = (() => {
   }
 
   /* ---------- Copia de seguridad ---------- */
+  function aBase64(buf) {
+    const b = new Uint8Array(buf);
+    let s = '';
+    for (let i = 0; i < b.length; i += 0x8000) s += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000));
+    return btoa(s);
+  }
+  function deBase64(txt) {
+    const s = atob(txt);
+    const b = new Uint8Array(s.length);
+    for (let i = 0; i < s.length; i++) b[i] = s.charCodeAt(i);
+    return b.buffer;
+  }
   async function exportar(incluirClave) {
     const ls = {};
     CLAVES.forEach((k) => { const v = leer(k, undefined); if (v !== undefined) ls[k] = v; });
     if (ls.ajustes && !incluirClave) ls.ajustes = { ...ls.ajustes, claveGemini: '' };
+    const archivos = {};
+    Object.entries(await idbTodo('archivos')).forEach(([sigla, lista]) => {
+      archivos[sigla] = (lista || []).map((f) => ({ ...f, datos: aBase64(f.datos) }));
+    });
     return {
-      app: 'civilizacion-de-estudio', version: 1, creada: new Date().toISOString(),
-      localStorage: ls, apuntes: await idbTodo('apuntes'), kv: await idbTodo('kv'),
+      app: 'civilizacion-de-estudio', version: 2, creada: new Date().toISOString(),
+      localStorage: ls, apuntes: await idbTodo('apuntes'), kv: await idbTodo('kv'), archivos,
     };
   }
   async function importar(datos) {
@@ -108,13 +127,16 @@ const Almacen = (() => {
     // si la copia no traía la clave, se conserva la del dispositivo
     const aj = leer('ajustes', {}) || {};
     if (!aj.claveGemini && claveActual) guardar('ajustes', { ...aj, claveGemini: claveActual });
-    await idbVaciar('apuntes'); await idbVaciar('kv');
+    await idbVaciar('apuntes'); await idbVaciar('kv'); await idbVaciar('archivos');
     for (const [k, v] of Object.entries(datos.apuntes || {})) await idbGuardar('apuntes', k, v);
     for (const [k, v] of Object.entries(datos.kv || {})) await idbGuardar('kv', k, v);
+    for (const [k, lista] of Object.entries(datos.archivos || {})) {
+      await idbGuardar('archivos', k, (lista || []).map((f) => ({ ...f, datos: deBase64(f.datos) })));
+    }
   }
   async function reiniciar() {
     CLAVES.forEach((k) => borrar(k));
-    await idbVaciar('apuntes'); await idbVaciar('kv');
+    await idbVaciar('apuntes'); await idbVaciar('kv'); await idbVaciar('archivos');
   }
 
   return { leer, guardar, borrar, idbLeer, idbGuardar, idbBorrar, idbTodo, exportar, importar, reiniciar };

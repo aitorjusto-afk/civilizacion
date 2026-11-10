@@ -111,14 +111,23 @@ const Estudio = (() => {
       return;
     }
     const resto = bl.length - elegidos.length;
-    cont.innerHTML = `<div class="es-ap-cab"><strong>${t && t.bloques.length ? `Bloques ${t.bloques.join(', ')}` : 'Todos los apuntes'}</strong>
-      <input type="search" id="es-buscar" placeholder="Buscar…">${resto > 0 ? `<button class="btn mini" id="es-todos">Ver todos (${bl.length})</button>` : ''}</div>
-      <div class="lectura" id="es-lectura">${elegidos.map((b) => `<section class="bloque"><span class="num-bloque">Bloque ${b.n}</span>${U.md(b.texto)}</section>`).join('')}</div>`;
+    const titulos = elegidos.length < bl.length ? elegidos.map((b) => b.titulo).join(' · ') : 'Todos los apuntes';
+    cont.innerHTML = `<div class="es-ap-cab"><strong title="${U.esc(titulos)}">${U.esc(titulos.length > 90 ? titulos.slice(0, 90) + '…' : titulos)}</strong>
+      <input type="search" id="es-buscar" placeholder="Buscar…">${resto > 0 ? `<button class="btn mini" id="es-todos">Ver todos los apuntes</button>` : ''}</div>
+      <div id="es-resultados"></div>
+      <div class="lectura" id="es-lectura"></div>`;
+    Apuntes.pintarBloques(U.$('#es-lectura'), elegidos, ses.asignatura);
     const bt = U.$('#es-todos');
-    if (bt) bt.onclick = () => { U.$('#es-lectura').innerHTML = bl.map((b) => `<section class="bloque ${t.bloques.includes(b.n) ? 'elegido' : ''}"><span class="num-bloque">Bloque ${b.n}</span>${U.md(b.texto)}</section>`).join(''); bt.remove(); };
+    const verTodo = () => { if (!U.$('#es-todos')) return; Apuntes.pintarBloques(U.$('#es-lectura'), bl, ses.asignatura); U.$('#es-todos').remove(); };
+    if (bt) bt.onclick = verTodo;
+    let espera;
     U.$('#es-buscar').addEventListener('input', (e) => {
-      const m = Apuntes.resaltar(U.$('#es-lectura'), e.target.value);
-      if (m[0]) m[0].scrollIntoView({ block: 'center' });
+      clearTimeout(espera);
+      espera = setTimeout(() => {
+        const m = Apuntes.resaltar(U.$('#es-lectura'), e.target.value);
+        Apuntes.pintarResultadosPdf(U.$('#es-resultados'), U.$('#es-lectura'), App.pdfs[ses.asignatura] || [], e.target.value, verTodo);
+        if (m[0]) m[0].scrollIntoView({ block: 'center' });
+      }, 220);
     });
   }
 

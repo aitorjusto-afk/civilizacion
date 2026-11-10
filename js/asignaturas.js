@@ -65,6 +65,7 @@ const Asignaturas = (() => {
         App.tareas.forEach((t) => { if (t.asignatura === id) t.asignatura = nueva.id; });
         App.piezas.forEach((p) => { if (p.asignatura === id) p.asignatura = nueva.id; });
         if (App.apuntes[id]) { await Modelo.guardarApuntes(nueva.id, App.apuntes[id]); await Modelo.guardarApuntes(id, ''); }
+        if (App.pdfs[id]) { await Modelo.guardarPdfs(nueva.id, App.pdfs[id]); await Modelo.guardarPdfs(id, []); }
         Modelo.guardarTareas(); Modelo.guardarPiezas();
       }
     } else App.asignaturas.push(nueva);
@@ -81,6 +82,7 @@ const Asignaturas = (() => {
     App.asignaturas = App.asignaturas.filter((x) => x.id !== id);
     Modelo.guardarAsignaturas();
     await Modelo.guardarApuntes(id, '');
+    await Modelo.guardarPdfs(id, []);
     AppUI.refrescar();
   }
 

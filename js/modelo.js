@@ -9,6 +9,7 @@ const App = {
   sesiones: [],   // registro de sesiones de estudio
   ajustes: {},
   apuntes: {},    // { SIGLA: texto markdown }
+  pdfs: {},       // { SIGLA: [{ id, nombre, paginas, proporcion, bloques:[{titulo,nivel,pagIni,pagFin}], textos:[...], datos: ArrayBuffer }] }
   calendario: '', // texto del calendario
   animarPieza: null,
 };
@@ -36,6 +37,7 @@ const Modelo = (() => {
     App.sesiones = Almacen.leer('sesiones', []) || [];
     App.ajustes = { ...AJUSTES_DEFECTO, ...(Almacen.leer('ajustes', {}) || {}) };
     App.apuntes = (await Almacen.idbTodo('apuntes')) || {};
+    App.pdfs = (await Almacen.idbTodo('archivos')) || {};
     App.calendario = (await Almacen.idbLeer('kv', 'calendario')) || '';
     sincronizarPiezas();
   }
@@ -173,23 +175,37 @@ const Modelo = (() => {
     return n;
   }
 
+  /* Bloques de una asignatura: primero los del texto (por títulos) y luego los de cada PDF (por su índice, en páginas). */
   const cacheBloques = {};
   function bloquesDe(sigla) {
     const texto = App.apuntes[sigla] || '';
+    const pdfs = App.pdfs[sigla] || [];
+    const clave = texto + '|' + pdfs.map((p) => p.id).join(',');
     const c = cacheBloques[sigla];
-    if (c && c.texto === texto) return c.bloques;
+    if (c && c.clave === clave) return c.bloques;
     const b = U.bloques(texto);
-    cacheBloques[sigla] = { texto, bloques: b };
+    pdfs.forEach((p) => (p.bloques || []).forEach((x) => {
+      const t = (p.textos || []).slice(x.pagIni - 1, x.pagFin).join('\n');
+      b.push({ n: b.length + 1, titulo: x.titulo, nivel: x.nivel || 1, texto: t, palabras: (t.match(/\S+/g) || []).length, pdf: { id: p.id, pagIni: x.pagIni, pagFin: x.pagFin } });
+    }));
+    cacheBloques[sigla] = { clave, bloques: b };
     return b;
   }
+  const hayApuntes = (sigla) => !!((App.apuntes[sigla] || '').trim() || (App.pdfs[sigla] || []).length);
+  const hayAlgunApunte = () => App.asignaturas.some((a) => hayApuntes(a.id)) || Object.keys(App.apuntes).length > 0;
+  const pdfPorId = (id) => { for (const l of Object.values(App.pdfs)) { const p = (l || []).find((x) => x.id === id); if (p) return p; } return null; };
   async function guardarApuntes(sigla, texto) {
     if (texto && texto.trim()) { App.apuntes[sigla] = texto; await Almacen.idbGuardar('apuntes', sigla, texto); }
     else { delete App.apuntes[sigla]; await Almacen.idbBorrar('apuntes', sigla); }
+  }
+  async function guardarPdfs(sigla, lista) {
+    if (lista && lista.length) { App.pdfs[sigla] = lista; await Almacen.idbGuardar('archivos', sigla, lista); }
+    else { delete App.pdfs[sigla]; await Almacen.idbBorrar('archivos', sigla); }
   }
   async function guardarCalendario(texto) {
     App.calendario = texto || '';
     await Almacen.idbGuardar('kv', 'calendario', App.calendario);
   }
 
-  return { ASIG_DEFECTO, TIPOS, cargar, sincronizarPiezas, guardarTareas, guardarPiezas, guardarAsignaturas, guardarAjustes, asig, colorDe, nombreDe, normalizar, ordenadas, total, hechas, pasada, completar, descompletar, borrarTarea, guardarTarea, reparar, piezaDe, registrarSesion, importarTareas, bloquesDe, guardarApuntes, guardarCalendario };
+  return { ASIG_DEFECTO, TIPOS, cargar, sincronizarPiezas, guardarTareas, guardarPiezas, guardarAsignaturas, guardarAjustes, asig, colorDe, nombreDe, normalizar, ordenadas, total, hechas, pasada, completar, descompletar, borrarTarea, guardarTarea, reparar, piezaDe, registrarSesion, importarTareas, bloquesDe, hayApuntes, hayAlgunApunte, pdfPorId, guardarApuntes, guardarPdfs, guardarCalendario };
 })();

@@ -60,7 +60,7 @@ const U = (() => {
   /* ---------- Markdown seguro ---------- */
   function md(texto) {
     let html = '';
-    try { html = window.marked ? marked.parse(String(texto || ''), { gfm: true }) : `<pre>${esc(texto)}</pre>`; }
+    try { html = window.marked ? marked.parse(String(texto || ''), { gfm: true, breaks: true }) : `<pre>${esc(texto)}</pre>`; }
     catch (e) { html = `<pre>${esc(texto)}</pre>`; }
     try {
       const doc = new DOMParser().parseFromString(`<div>${html}</div>`, 'text/html');

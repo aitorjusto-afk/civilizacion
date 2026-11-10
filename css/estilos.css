@@ -209,6 +209,23 @@ legend { font-weight: 600; font-size: .9rem; padding: 0 4px; }
 mark.coincide { background: #ffe58a; color: #2d2a26; border-radius: 3px; }
 mark.coincide.actual { background: #ff9f43; }
 .editor textarea { min-height: 60vh; }
+.indice li.nivel-2 { margin-left: .8em; font-size: .95em; }
+.indice li.nivel-3 { margin-left: 1.6em; font-size: .9em; }
+.lista-pdfs { list-style: none; padding: 0; margin: 0 0 12px; display: grid; gap: 6px; }
+.lista-pdfs li { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.pdf-doc { margin-top: 14px; }
+.pdf-cab { position: sticky; top: 0; z-index: 1; padding: 6px 0; background: var(--tarjeta); }
+.pdf-paginas { display: grid; gap: 12px; }
+.pagina-pdf { position: relative; width: 100%; background: #fff; border: 1px solid var(--borde); border-radius: 4px; box-shadow: 0 1px 6px rgba(0,0,0,.12); overflow: hidden; scroll-margin-top: 90px; }
+.pagina-pdf:not(.lista)::before { content: 'Cargando página…'; position: absolute; inset: 0; display: grid; place-items: center; color: #9a9184; font-size: .9rem; }
+.pagina-pdf.fallo::before { content: 'No se pudo dibujar esta página'; }
+.pagina-pdf canvas { display: block; width: 100%; height: 100%; }
+.pagina-pdf.destello { outline: 4px solid #ff9f43; }
+.num-pag { position: absolute; right: 6px; bottom: 6px; background: rgba(45, 42, 38, .7); color: #fff; font-size: .72rem; padding: 1px 7px; border-radius: 999px; }
+.resultados-pdf { background: color-mix(in srgb, #ffe58a 25%, var(--tarjeta)); border: 1px solid var(--borde); border-radius: 10px; padding: 8px 12px; margin-bottom: 10px; font-size: .9rem; }
+.resultados-pdf ul { margin: 4px 0 0; padding-left: 1.2em; max-height: 200px; overflow: auto; }
+.estudio-apuntes .resultados-pdf { background: #fff6d6; }
+.estudio-apuntes .pdf-cab { background: #f8f3e8; }
 
 /* ---------- Importar ---------- */
 .pasos { display: flex; gap: 8px; list-style: none; padding: 0; margin: 0 0 14px; counter-reset: paso; flex-wrap: wrap; }
